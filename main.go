@@ -1,8 +1,8 @@
 package main
 
 import (
-	middlewares "blog/middleware"
-	"blog/models"
+	"blog/middleware"
+	"blog/model"
 	"blog/pkg/setting"
 	"blog/routers"
 	"fmt"
@@ -35,13 +35,13 @@ type Login struct {
 
 func main() {
 	router := gin.Default()
-	models.InitDB()
+	model.InitDB()
 	routersInit := routers.InitRouter()
 	// account.Name = "hello"
 	// account.Email = "hello@hello.com"
 	// account.Save()
 
-	router.Use(middlewares.TestMiddle())
+	router.Use(middleware.TestMiddle())
 	s := &http.Server{
 		Addr:           fmt.Sprintf(":%d", setting.HTTPPort),
 		Handler:        routersInit,

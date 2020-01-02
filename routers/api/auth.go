@@ -1,41 +1,45 @@
 package api
 
 import (
+	"blog/model"
+	"blog/pkg/setting"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/astaxie/beego/validation"
 	"github.com/gin-gonic/gin"
 
-	"blog/models"
 	"blog/pkg/e"
 	"blog/pkg/util"
 )
 
-type auth struct {
+type AuthForm struct {
 	Username string `valid:"Required; MaxSize(50)"`
 	Password string `valid:"Required; MaxSize(50)"`
 }
 
-func GetAuth(c *gin.Context) {
-	username := c.Query("username")
-	password := c.Query("password")
+func Login(c *gin.Context) {
+
+	var authForm AuthForm
+
+	c.BindJSON(&authForm)
 
 	valid := validation.Validation{}
-	a := auth{Username: username, Password: password}
-	ok, _ := valid.Valid(&a)
+	// a := auth{Username: a.Username, Password: a.Password}
+	ok, _ := valid.Valid(&authForm)
 
 	data := make(map[string]interface{})
 	code := e.INVALID_PARAMS
 	if ok {
-		isExist := models.CheckAuth(username, password)
+		user, isExist := model.UserLogin(authForm.Username, authForm.Password)
+		fmt.Println(isExist)
 		if isExist {
-			token, err := util.GenerateToken(username, password)
+			token, err := util.GenerateToken(user.Username, user.Password, user.ID.String(), setting.SessionTTL)
 			if err != nil {
 				code = e.ERROR_AUTH_TOKEN
 			} else {
 				data["token"] = token
-
 				code = e.SUCCESS
 			}
 

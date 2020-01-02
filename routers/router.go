@@ -1,11 +1,12 @@
 package routers
 
 import (
+	"blog/controllers"
 	"blog/pkg/setting"
 	"blog/routers/api"
 	v1 "blog/routers/api/v1"
 
-	"blog/middleware/jwt"
+	"blog/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,13 +18,19 @@ func InitRouter() *gin.Engine {
 
 	r.Use(gin.Recovery())
 
+	r.Use(middleware.Options)
+
+	r.Use(
+		middleware.JWTHeadAuth(middleware.AllowPathPrefixSkipper(
+			middleware.JoinRouter("POST", "/api/v1/users"),
+			middleware.JoinRouter("POST", "/api/v1/auth"),
+		)))
+
 	gin.SetMode(setting.RunMode)
 
-	r.GET("/auth", api.GetAuth)
+	r.POST("/api/v1/auth/login", api.Login)
 
 	apiv1 := r.Group("/api/v1")
-
-	apiv1.Use(jwt.JWT())
 	{
 		//获取标签列表
 		apiv1.GET("/tags", v1.GetTags)
@@ -44,6 +51,28 @@ func InitRouter() *gin.Engine {
 		apiv1.PUT("/articles/:id", v1.EditArticle)
 		//删除指定文章
 		apiv1.DELETE("/articles/:id", v1.DeleteArticle)
+
+		// 用户列表
+		// apiv1.GET("/users", controllers.AccountCtl)
+		userCtl := controllers.UserController{}
+		apiv1.GET("/users", userCtl.List)
+		// 用户注册
+		apiv1.POST("/users", userCtl.Create)
+		// 获取用户信息
+		apiv1.GET("/user-info", v1.UserInfo)
+		// 删除用户
+		apiv1.POST("/users/:id", v1.DeleteUser)
+
+		//角色管理
+		apiv1.GET("/roles", v1.GetRoles)
+		// 新增角色
+		apiv1.POST("/roles", v1.AddRole)
+
+		//menu list
+		apiv1.GET("/menus", v1.GetMenus)
+
+		//add menu
+		apiv1.POST("/menus", v1.AddMenu)
 	}
 
 	return r

@@ -15,8 +15,9 @@ var (
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
 
-	PageSize  int
-	JwtSecret string
+	PageSize   int
+	JwtSecret  string
+	SessionTTL int
 )
 
 func init() {
@@ -33,6 +34,7 @@ func init() {
 
 func LoadBase() {
 	RunMode = Cfg.Section("").Key("RUN_MODE").MustString("debug")
+	SessionTTL = 100
 }
 
 func LoadServer() {
